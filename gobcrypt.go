@@ -2,10 +2,14 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"math/rand"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -44,33 +48,122 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
+// readLines reads a whole file into memory
+// and returns a slice of its lines.
+func readLines(path string) ([]string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	return lines, scanner.Err()
+}
+
+// writeLines writes the lines to the given file.
+func writeLines(lines []string, path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	w := bufio.NewWriter(file)
+	for _, line := range lines {
+		fmt.Fprintln(w, line)
+	}
+	return w.Flush()
+}
+
+// writeLines writes the lines to the given file.
+func writeLine(lines string, path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	w := bufio.NewWriter(file)
+	for _, line := range lines {
+		fmt.Fprintln(w, line)
+	}
+	return w.Flush()
+}
+
+//func hashLines(lines []string) {
+//	var hashlines []string
+//	for _, line := range lines {
+//		password := line
+//		hash, _ := HashPassword(password)
+//		hashlines := append(hashlines, password, "	", hash)
+//	}
+//	return hashlines
+//}
+
 func main() {
-	//password := "secret"
-	//password := os.Args[1]
+
 	var count, pwlength int
-	var thispw string
+	var thispw, infile, outfile string
 	var testhash bool
 	flag.IntVar(&count, "c", 1, "Specify the number of hashes to create")
 	flag.StringVar(&thispw, "s", "", "Hash the specified password only (1)")
 	flag.BoolVar(&testhash, "t", false, "Validate the hash & pass")
 	flag.IntVar(&pwlength, "l", 15, "Specify the length of password required")
+	flag.StringVar(&infile, "f", "", "Specify a file to read passwords from")
+	flag.StringVar(&outfile, "o", "", "Specify a file to write out the pass/hash to")
 	flag.Parse()
 
 	if thispw == "" {
 		for count > 0 {
 
-			password := RandomString2(pwlength)
-			hash, _ := HashPassword(password) // ignore error for the sake of simplicity
+			if infile != "" {
+				lines, err := readLines(infile)
+				if err != nil {
+					log.Fatalf("readLines: %s", err)
+				}
+				fmt.Println(lines)
+				var hashlines []string
+				for _, line := range lines {
+					password := line
+					hash, _ := HashPassword(password)
 
-			fmt.Println(password, "	", hash)
+					fmt.Println(password, "	", hash)
+					if testhash != false {
+						match := CheckPasswordHash(password, hash)
+						fmt.Println("Match:	", match)
+					}
+					hasharray := []string{password, hash}
+					hashline := strings.Join(hasharray, "	")
+					hashlines = append(hashlines, hashline)
+					//fmt.Println(hashline)
+					if err := writeLines(hashlines, "outfile.txt"); err != nil {
+						log.Fatal("writeLine: %s", err)
+					}
+				}
+			} else {
 
-			if testhash != false {
-				match := CheckPasswordHash(password, hash)
-				fmt.Println("Match:   ", match)
+				password := RandomString2(pwlength)
+				hash, _ := HashPassword(password) // TODO add error handling
+
+				fmt.Println(password, "	", hash)
+				if testhash != false {
+					match := CheckPasswordHash(password, hash)
+					fmt.Println("Match:   ", match)
+				}
 			}
+
 			count -= 1
 		}
 	} else {
+
+		if infile != "" {
+			log.Fatalf("Cannot run -s and -f together please select one")
+		}
 		password := thispw
 		hash, _ := HashPassword(password)
 
