@@ -6,6 +6,8 @@
 Usage of ./gobcrypt:
   -c int
     	Specify the number of hashes to create (default 1)
+  -l int
+    	Specify the length of password required (default 15)
   -s string
     	Hash the specified password only (1)
   -t	Validate the hash & pass
@@ -29,6 +31,13 @@ $ gobcrypt -s supergoodpass -t
 supergoodpass 	 $2a$14$xyy2eH4baTpn11s5fi8wGuQrcHVohw3jTNjFh.Oy9sLh2kjT/cire
 Match:    true
 ```
+
+Create passwords of a specific length (15 chars by default)
+```
+$ gobcrypt -l 20
+MY5XsvCIwtTuHAx8fvzh 	 $2a$14$j.aRi/JkQ.1rbrxh1aAugeMht/ekdk72b0DYmvNvPgR1dISa8.dXe
+```
+
 Create a bulk amount of password hash combinations
 ```
 $ gobcrypt -c 7

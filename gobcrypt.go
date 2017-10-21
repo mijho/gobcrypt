@@ -47,18 +47,19 @@ func CheckPasswordHash(password, hash string) bool {
 func main() {
 	//password := "secret"
 	//password := os.Args[1]
-	var count int
+	var count, pwlength int
 	var thispw string
 	var testhash bool
 	flag.IntVar(&count, "c", 1, "Specify the number of hashes to create")
 	flag.StringVar(&thispw, "s", "", "Hash the specified password only (1)")
 	flag.BoolVar(&testhash, "t", false, "Validate the hash & pass")
+	flag.IntVar(&pwlength, "l", 15, "Specify the length of password required")
 	flag.Parse()
 
 	if thispw == "" {
 		for count > 0 {
 
-			password := RandomString2(15)
+			password := RandomString2(pwlength)
 			hash, _ := HashPassword(password) // ignore error for the sake of simplicity
 
 			fmt.Println(password, "	", hash)
