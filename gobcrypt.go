@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"strconv"
 )
 
 var r *rand.Rand // Rand for this package.
@@ -43,7 +44,7 @@ func HashPassword(password string) (string, error) {
 /* This function compares the plain text password with the hash to ensure it is
 *  valid. It requires both the plain text and hash pass String to be passed to it
  */
-func CheckPasswordHash(password, hash string) bool {
+func checkHashAndPassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
@@ -80,21 +81,6 @@ func writeLines(lines []string, path string) error {
 	return w.Flush()
 }
 
-// writeLines writes the lines to the given file.
-func writeLine(lines string, path string) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	w := bufio.NewWriter(file)
-	for _, line := range lines {
-		fmt.Fprintln(w, line)
-	}
-	return w.Flush()
-}
-
 //func hashLines(lines []string) {
 //	var hashlines []string
 //	for _, line := range lines {
@@ -104,6 +90,16 @@ func writeLine(lines string, path string) error {
 //	}
 //	return hashlines
 //}
+
+func matchPasswordAndHash(password, hash string) string {
+	match := checkHashAndPassword(password, hash)
+	matchString := strconv.FormatBool(match)
+	matchArray := []string{"Match: ", matchString}
+	matchLine := strings.Join(matchArray, " ")
+	return string(matchLine)
+}
+
+
 
 func main() {
 
@@ -126,23 +122,33 @@ func main() {
 				if err != nil {
 					log.Fatalf("readLines: %s", err)
 				}
-				fmt.Println(lines)
+				// fmt.Println(lines)
 				var hashlines []string
 				for _, line := range lines {
 					password := line
 					hash, _ := HashPassword(password)
+					matchLine := "hats"
 
-					fmt.Println(password, "	", hash)
-					if testhash != false {
-						match := CheckPasswordHash(password, hash)
-						fmt.Println("Match:	", match)
-					}
 					hasharray := []string{password, hash}
 					hashline := strings.Join(hasharray, "	")
 					hashlines = append(hashlines, hashline)
+
+					// fmt.Println(password, "	", hash)
+
+					if testhash != false {
+						matchLine = matchPasswordAndHash(password, hash)
+						hashlines = append(hashlines, matchLine)
+					}
+
 					//fmt.Println(hashline)
-					if err := writeLines(hashlines, "outfile.txt"); err != nil {
-						log.Fatal("writeLine: %s", err)
+					
+					if outfile != "" {
+						if err := writeLines(hashlines, outfile); err != nil {
+							log.Fatal("writeLine: %s", err)
+						}
+					} else {
+						fmt.Println(hashline)
+						fmt.Println(matchLine)
 					}
 				}
 			} else {
@@ -152,8 +158,8 @@ func main() {
 
 				fmt.Println(password, "	", hash)
 				if testhash != false {
-					match := CheckPasswordHash(password, hash)
-					fmt.Println("Match:   ", match)
+					matchLine = matchPasswordAndHash(password, hash)
+					hashlines = append(hashlines, matchLine)
 				}
 			}
 
@@ -167,9 +173,12 @@ func main() {
 		password := thispw
 		hash, _ := HashPassword(password)
 
-		fmt.Println(password, "	", hash)
+		// fmt.Println(password, "	", hash)
+		hasharray := []string{password,hash}
+		hashline := strings.Join(hasharray, "	")
+		fmt.Println(hashline)
 		if testhash != false {
-			match := CheckPasswordHash(password, hash)
+			match := checkHashAndPassword(password, hash)
 			fmt.Println("Match:   ", match)
 		}
 	}
