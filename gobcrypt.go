@@ -106,47 +106,21 @@ func main() {
 	flag.Parse()
 
 	if thisPW == "" {
-		for count > 0 {
 
-			if inFile != "" {
-				lines, err := readLines(inFile)
+		if inFile != "" {
+
+			lines, err := readLines(inFile)
+			
+			if err != nil {
+				log.Fatalf("readLines: %s", err)
+			}
+			var hashLines []string
+			
+			for _, line := range lines {
 				
-				if err != nil {
-					log.Fatalf("readLines: %s", err)
-				}
-				var hashLines []string
-				
-				for _, line := range lines {
-					
-					password := line
-					hash, _ := hashPassword(password)
-					var matchLine string
-					hashArray := []string{password, hash}
-					hashLine := strings.Join(hashArray, "	")
-					hashLines = append(hashLines, hashLine)
-
-					if testHash != false {
-						matchLine = matchPasswordAndHash(password, hash)
-						hashLines = append(hashLines, matchLine)
-					}
-					
-					if outFile != "" {
-						if err := writeLines(hashLines, outFile); err != nil {
-							log.Fatal("writeLine: %s", err)
-						}
-					} else {
-						fmt.Println(hashLine)
-						if testHash != false {
-							fmt.Println(matchLine)
-						}
-					}
-				}
-			} else {
-
+				password := line
+				hash, _ := hashPassword(password)
 				var matchLine string
-				var hashLines []string
-				password := randomString(pwLength)
-				hash, _ := hashPassword(password) // TODO add error handling
 				hashArray := []string{password, hash}
 				hashLine := strings.Join(hashArray, "	")
 				hashLines = append(hashLines, hashLine)
@@ -155,6 +129,7 @@ func main() {
 					matchLine = matchPasswordAndHash(password, hash)
 					hashLines = append(hashLines, matchLine)
 				}
+				
 				if outFile != "" {
 					if err := writeLines(hashLines, outFile); err != nil {
 						log.Fatal("writeLine: %s", err)
@@ -166,7 +141,36 @@ func main() {
 					}
 				}
 			}
-			count -= 1
+		} else {
+
+			var matchLine string
+			var hashLines []string
+
+			for count > 0 {
+
+				password := randomString(pwLength)
+				hash, _ := hashPassword(password) // TODO add error handling
+				hashArray := []string{password, hash}
+				hashLine := strings.Join(hashArray, "	")
+				hashLines = append(hashLines, hashLine)
+
+				if testHash != false {
+					matchLine = matchPasswordAndHash(password, hash)
+					hashLines = append(hashLines, matchLine)
+				}
+				if outFile == "" {
+					fmt.Println(hashLine)
+					if testHash != false {
+						fmt.Println(matchLine)
+					}
+				}
+				count -= 1
+			}
+			if outFile != "" {
+				if err := writeLines(hashLines, outFile); err != nil {
+					log.Fatal("writeLine: %s", err)
+				}
+			} 			
 		}
 	} else {
 

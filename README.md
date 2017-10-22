@@ -1,4 +1,6 @@
-#### GobCrypt
+### GobCrypt
+
+https://travis-ci.org/mijho/gobcrypt.svg?branch=testing%2Ffileman
 
 ##### A Bcrypt hash password generator written in golang
 
@@ -6,8 +8,12 @@
 Usage of ./gobcrypt:
   -c int
     	Specify the number of hashes to create (default 1)
+  -f string
+    	Specify a file to read passwords from
   -l int
     	Specify the length of password required (default 15)
+  -o string
+    	Specify a file to write out the pass/hash to
   -s string
     	Hash the specified password only (1)
   -t	Validate the hash & pass
@@ -48,4 +54,23 @@ eyrPsYSTn2LYuX1 	 $2a$14$pPeZKP3PzlepCFOxiO50Ce45Z3nBVFuWoL/RpAp7d1LdKHIoycVnW
 MsUq5tySGQWhMlr 	 $2a$14$5zXPe7SVD0Hi2tAARkOQrOb4H.rbG9CYjVoKx9/fxX7w5.LZ2loY2
 AaSs34ck3aWQThd 	 $2a$14$7yAraJ5JoR2G6aeoOBj/hOJKgEZ59cmi50G2tziO/Qo3X7g79B4cS
 HYM75gTV3vsEFTA 	 $2a$14$GnC0/3UPWO70Ukb2kIhZhOtAGkN.1N7xkdGvwEoAV5zz.2kxFpcAK
+```
+
+Create a bulk amount and write the output to file
+```
+$ gobcrypt -o outfile.txt
+$ cat outfile.txt
+DIp45AxXuT7Re9k	$2a$14$um1e1ig32qoaeETqWLkJE.ESue94U7IwuqzYN/JKJP/P.GB25WVsa
+```
+
+Read passwords from file to hash
+```
+$ cat infile.txt
+password1
+password2
+password3
+$ gobcrypt -f infile.txt
+password1	$2a$14$6AM58C1/t5cqKV7m6kPKd.WrIpbYZn97NhNhjr4Xwj0rGdgol934q
+password2	$2a$14$MvAYQoCn6l/ciAtARTd41edNgxFji3fj9lu4Xq9BR/9mCj34GRqZe
+password3	$2a$14$1UDD9eQczWyAydODriHwk.ORhIsQqAoXBf2Xpj0RXdcq4QEYRkWue
 ```
