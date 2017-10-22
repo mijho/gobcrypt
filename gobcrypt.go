@@ -23,7 +23,7 @@ func init() {
 /* This function will generate a random string based on the random value
 *  set from the init function ant the chars defined below
  */
-func RandomString2(strlen int) string {
+func randomString(strlen int) string {
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	result := ""
 	for i := 0; i < strlen; i++ {
@@ -36,7 +36,7 @@ func RandomString2(strlen int) string {
 /* This function will create a hashed password using bcrypt. It requires a
 *  String value to be passed as an argument and returns the hash as a String
  */
-func HashPassword(password string) (string, error) {
+func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
 }
@@ -81,16 +81,9 @@ func writeLines(lines []string, path string) error {
 	return w.Flush()
 }
 
-//func hashLines(lines []string) {
-//	var hashlines []string
-//	for _, line := range lines {
-//		password := line
-//		hash, _ := HashPassword(password)
-//		hashlines := append(hashlines, password, "	", hash)
-//	}
-//	return hashlines
-//}
-
+/* Processes the returned Bool value from checkHashAndPassword
+*  and formats it for use in hashLines
+*/
 func matchPasswordAndHash(password, hash string) string {
 	match := checkHashAndPassword(password, hash)
 	matchString := strconv.FormatBool(match)
@@ -99,88 +92,109 @@ func matchPasswordAndHash(password, hash string) string {
 	return string(matchLine)
 }
 
-
-
 func main() {
 
-	var count, pwlength int
-	var thispw, infile, outfile string
-	var testhash bool
+	var count, pwLength int
+	var thisPW, inFile, outFile string
+	var testHash bool
 	flag.IntVar(&count, "c", 1, "Specify the number of hashes to create")
-	flag.StringVar(&thispw, "s", "", "Hash the specified password only (1)")
-	flag.BoolVar(&testhash, "t", false, "Validate the hash & pass")
-	flag.IntVar(&pwlength, "l", 15, "Specify the length of password required")
-	flag.StringVar(&infile, "f", "", "Specify a file to read passwords from")
-	flag.StringVar(&outfile, "o", "", "Specify a file to write out the pass/hash to")
+	flag.StringVar(&thisPW, "s", "", "Hash the specified password only (1)")
+	flag.BoolVar(&testHash, "t", false, "Validate the hash & pass")
+	flag.IntVar(&pwLength, "l", 15, "Specify the length of password required")
+	flag.StringVar(&inFile, "f", "", "Specify a file to read passwords from")
+	flag.StringVar(&outFile, "o", "", "Specify a file to write out the pass/hash to")
 	flag.Parse()
 
-	if thispw == "" {
+	if thisPW == "" {
 		for count > 0 {
 
-			if infile != "" {
-				lines, err := readLines(infile)
+			if inFile != "" {
+				lines, err := readLines(inFile)
+				
 				if err != nil {
 					log.Fatalf("readLines: %s", err)
 				}
-				// fmt.Println(lines)
-				var hashlines []string
+				var hashLines []string
+				
 				for _, line := range lines {
-					password := line
-					hash, _ := HashPassword(password)
-					matchLine := "hats"
-
-					hasharray := []string{password, hash}
-					hashline := strings.Join(hasharray, "	")
-					hashlines = append(hashlines, hashline)
-
-					// fmt.Println(password, "	", hash)
-
-					if testhash != false {
-						matchLine = matchPasswordAndHash(password, hash)
-						hashlines = append(hashlines, matchLine)
-					}
-
-					//fmt.Println(hashline)
 					
-					if outfile != "" {
-						if err := writeLines(hashlines, outfile); err != nil {
+					password := line
+					hash, _ := hashPassword(password)
+					var matchLine string
+					hashArray := []string{password, hash}
+					hashLine := strings.Join(hashArray, "	")
+					hashLines = append(hashLines, hashLine)
+
+					if testHash != false {
+						matchLine = matchPasswordAndHash(password, hash)
+						hashLines = append(hashLines, matchLine)
+					}
+					
+					if outFile != "" {
+						if err := writeLines(hashLines, outFile); err != nil {
 							log.Fatal("writeLine: %s", err)
 						}
 					} else {
-						fmt.Println(hashline)
-						fmt.Println(matchLine)
+						fmt.Println(hashLine)
+						if testHash != false {
+							fmt.Println(matchLine)
+						}
 					}
 				}
 			} else {
 
-				password := RandomString2(pwlength)
-				hash, _ := HashPassword(password) // TODO add error handling
+				var matchLine string
+				var hashLines []string
+				password := randomString(pwLength)
+				hash, _ := hashPassword(password) // TODO add error handling
+				hashArray := []string{password, hash}
+				hashLine := strings.Join(hashArray, "	")
+				hashLines = append(hashLines, hashLine)
 
-				fmt.Println(password, "	", hash)
-				if testhash != false {
+				if testHash != false {
 					matchLine = matchPasswordAndHash(password, hash)
-					hashlines = append(hashlines, matchLine)
+					hashLines = append(hashLines, matchLine)
+				}
+				if outFile != "" {
+					if err := writeLines(hashLines, outFile); err != nil {
+						log.Fatal("writeLine: %s", err)
+					}
+				} else {
+					fmt.Println(hashLine)
+					if testHash != false {
+						fmt.Println(matchLine)
+					}
 				}
 			}
-
 			count -= 1
 		}
 	} else {
 
-		if infile != "" {
+		if inFile != "" {
 			log.Fatalf("Cannot run -s and -f together please select one")
 		}
-		password := thispw
-		hash, _ := HashPassword(password)
 
-		// fmt.Println(password, "	", hash)
-		hasharray := []string{password,hash}
-		hashline := strings.Join(hasharray, "	")
-		fmt.Println(hashline)
-		if testhash != false {
-			match := checkHashAndPassword(password, hash)
-			fmt.Println("Match:   ", match)
+		var matchLine string
+		var hashLines []string
+		password := thisPW
+		hash, _ := hashPassword(password)
+		hashArray := []string{password, hash}
+		hashLine := strings.Join(hashArray, "	")
+		hashLines = append(hashLines, hashLine)
+
+		if testHash != false {
+			matchLine = matchPasswordAndHash(password, hash)
+			hashLines = append(hashLines, matchLine)
+		}
+		if outFile != "" {
+			if err := writeLines(hashLines, outFile); err != nil {
+				log.Fatal("writeLine: %s", err)
+			}
+		} else {
+			fmt.Println(hashLine)
+			if testHash != false {
+				fmt.Println(matchLine)
+			}
 		}
 	}
-
 }
