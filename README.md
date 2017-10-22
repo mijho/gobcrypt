@@ -1,6 +1,6 @@
 ### GobCrypt
 
-![build-status](https://travis-ci.org/mijho/gobcrypt.svg?branch=testing%2Ffileman)
+![build-status](https://travis-ci.org/mijho/gobcrypt.svg?branch=master)
 
 ##### A Bcrypt hash password generator written in golang
 
