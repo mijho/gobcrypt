@@ -2,7 +2,17 @@
 
 ![build-status](https://travis-ci.org/mijho/gobcrypt.svg?branch=master)
 
-##### A Bcrypt hash password generator written in golang
+#### A Bcrypt hash password generator written in golang
+
+##### Installation Instructions
+
+With go get:
+```
+$ go get github.com/mijho/gobcrypt
+```
+Or head to the releases page to download the prebuild binary for your system.
+
+NB gobcrypt has been tested fully on OSX and Linux amd64 only, please let me know if there are any performance issues.
 
 ```
 Usage of ./gobcrypt:
