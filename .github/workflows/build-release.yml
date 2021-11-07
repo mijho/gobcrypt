@@ -17,13 +17,14 @@ jobs:
         run: |
           make build-darwin-amd64
           make build-linux-amd64
-          make build-linux-arm64                
+          make build-linux-arm64
+      - name: Set env
+        run: echo "RELEASE_VERSION=$(./gobcrypt_linux_amd64 -v | awk '{print $3}' | sed 's/-.*//')" >> $GITHUB_ENV                         
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: CHANGELOG.md
-          tag_name: |
-            echo v$(./gobcrypt_linux_amd64 -v | awk '{print $3}' | sed 's/-.*//')
+          tag_name: $RELEASE_VERSION
           files: |
             gobcrypt_darwin_amd64
             gobcrypt_linux_amd64
