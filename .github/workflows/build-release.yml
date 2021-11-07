@@ -24,7 +24,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body_path: CHANGELOG.md
-          tag_name: $RELEASE_VERSION
+          tag_name: ${{ env.RELEASE_VERSION }}
           files: |
             gobcrypt_darwin_amd64
             gobcrypt_linux_amd64
