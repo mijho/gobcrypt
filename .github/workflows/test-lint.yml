@@ -38,7 +38,8 @@ jobs:
 
     - name: commit changelog
       run: |
-        [[ $$(git status --porcelain) ]] || exit
+        env
+        [[ $(git status --porcelain) ]] || exit
         git status
         git checkout $GITHUB_HEAD_REF
         git config --global user.name mijho
