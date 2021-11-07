@@ -34,8 +34,8 @@ func randomString(strlen int) string {
 /* This function will create a hashed password using bcrypt. It requires a
 *  String value to be passed as an argument and returns the hash as a String
  */
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+func hashPassword(password string, cost int) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), cost)
 	return string(bytes), err
 }
 
@@ -79,6 +79,7 @@ func writeLines(lines []string, path string) error {
 	return w.Flush()
 }
 
+// hanldes returning the output to user via file or stdout
 func returnOutput(hashLines []string, outFile string) error {
 	if outFile != "" {
 		if err := writeLines(hashLines, outFile); err != nil {
@@ -90,6 +91,22 @@ func returnOutput(hashLines []string, outFile string) error {
 		}
 	}
 	return nil
+}
+
+// generates a hash from the given password string
+func generateHashForPassword(password string, cost int) ([]string, error) {
+	fmt.Printf("Generating hash for password: %s\n", password)
+	var hashLines []string
+
+	hash, err := hashPassword(password, cost)
+	if err != nil {
+		return nil, err
+	}
+
+	hashLine := strings.Join([]string{password, hash}, " ")
+	hashLines = append(hashLines, hashLine)
+
+	return hashLines, err
 }
 
 /* Processes the returned Bool value from checkHashAndPassword

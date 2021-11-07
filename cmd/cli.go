@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/urfave/cli/v2"
 )
@@ -25,8 +24,8 @@ var CLIApp = &cli.App{
 	Description: fmt.Sprintf("Build: %s", Build),
 	Flags: []cli.Flag{
 		&cli.IntFlag{
-			Name:     "count",
-			Aliases:  []string{"c"},
+			Name:     "number",
+			Aliases:  []string{"n"},
 			Usage:    "Specify the number of hashes to create (default: 1)",
 			Value:    1,
 			Required: false,
@@ -56,6 +55,12 @@ var CLIApp = &cli.App{
 			Usage:    "Specify a file to write out the pass/hash to",
 			Required: false,
 		},
+		&cli.IntFlag{
+			Name:     "cost",
+			Aliases:  []string{"c"},
+			Usage:    "Specify the cost to use (Min: 4, Max: 31) (default: 14)",
+			Required: false,
+		},
 	},
 	Action: LocalHandler,
 	Authors: []*cli.Author{
@@ -69,9 +74,10 @@ var CLIApp = &cli.App{
 // LocalHandler provides stand alone functionality to generate CDX from the
 // provided WARC locally
 func LocalHandler(c *cli.Context) error {
+	cost := c.Int("cost")
 
 	if c.String("password") != "" {
-		hashLines, err := generateHashForPassword(c.String("password"))
+		hashLines, err := generateHashForPassword(c.String("password"), cost)
 		if err != nil {
 			fmt.Errorf("There was an error creating a hash: %s\n", err)
 		}
@@ -91,7 +97,7 @@ func LocalHandler(c *cli.Context) error {
 
 		var hashLines []string
 		for _, password := range lines {
-			hashLine, err := generateHashForPassword(password)
+			hashLine, err := generateHashForPassword(password, cost)
 			if err != nil {
 				fmt.Errorf("There was an error creating a hash: %s\n", err)
 			}
@@ -106,9 +112,9 @@ func LocalHandler(c *cli.Context) error {
 
 	var hashLines []string
 	pwLength := c.Int("length")
-	for count := c.Int("count"); count > 0; count-- {
+	for number := c.Int("number"); number > 0; number-- {
 		password := randomString(pwLength)
-		hashLine, err := generateHashForPassword(password)
+		hashLine, err := generateHashForPassword(password, cost)
 		if err != nil {
 			fmt.Errorf("There was an error creating a hash: %s\n", err)
 		}
@@ -120,19 +126,4 @@ func LocalHandler(c *cli.Context) error {
 	}
 
 	return nil
-}
-
-func generateHashForPassword(password string) ([]string, error) {
-	fmt.Printf("Generating hash for password: %s\n", password)
-	var hashLines []string
-
-	hash, err := hashPassword(password)
-	if err != nil {
-		return nil, err
-	}
-
-	hashLine := strings.Join([]string{password, hash}, " ")
-	hashLines = append(hashLines, hashLine)
-
-	return hashLines, err
 }
