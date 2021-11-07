@@ -19,7 +19,6 @@ jobs:
           make build-linux-arm64
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           body_path: CHANGELOG.md
           tag_name: |
