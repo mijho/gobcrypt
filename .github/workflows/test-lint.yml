@@ -38,7 +38,6 @@ jobs:
 
     - name: commit changelog
       run: |
-        env
         [[ $(git status --porcelain) ]] || exit
         git status
         git checkout $GITHUB_HEAD_REF
