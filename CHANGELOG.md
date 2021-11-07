@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Bug Fixes
+
+- Fmt -> log statements
+
+### Documentation
+
+- Updated readme and add changelog
+
 ### Features
 
 - Make bcrypt cost configurable
@@ -11,6 +19,7 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Add go mod
+- Remove old ci and go files
 
 ### Refactor
 
