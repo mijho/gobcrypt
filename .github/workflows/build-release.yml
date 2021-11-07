@@ -1,0 +1,33 @@
+name: Main
+
+on: 
+  pull_request:
+      branches:
+        - main
+      types: [closed]
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          make build-darwin-amd64
+          make build-linux-amd64
+          make build-linux-arm64
+      - name: Test
+        run: cat Release.txt
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body_path: CHANGELOG.md
+          tag_name: |
+            echo v$(./gobcrypt -v | awk '{print $3}' | sed 's/-.*//')
+          files: |
+            gobcrypt_darwin_amd64
+            gobcrypt_linux_amd64
+            gobcrypt_linux_arm64

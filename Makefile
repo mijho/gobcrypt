@@ -32,6 +32,11 @@ env:
 	$(GO_MOD)
 	go get ./...
 
+## Build for Darwin amd64 platform
+build-darwin-amd64:
+	GOOS=darwin GOARCH=amd64 \
+go build $(LDFLAGS) -o $(APP_NAME)_darwin_amd64 $(APP_SRC)	
+
 ## Build for GNU/Linux amd64 platform
 build-linux-amd64:
 	GOOS=linux GOARCH=amd64 \
