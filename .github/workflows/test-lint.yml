@@ -26,3 +26,23 @@ jobs:
     # Run testing on the code
     - name: Run testing
       run: make test
+
+    - name: Generate a changelog
+      uses: orhun/git-cliff-action@v1
+      id: git-cliff
+      with:
+        config: cliff.toml
+        args: --verbose
+      env:
+        OUTPUT: CHANGELOG.md      
+
+    - name: commit changelog
+      run: |
+        [[ $$(git status --porcelain) ]] || exit
+        git status
+        git checkout $GITHUB_HEAD_REF
+        git config --global user.name mijho
+        git config --global user.email "mijho@hey.com"
+        git add --all
+        git commit --all --message="ci: update changelog"
+        git push origin
