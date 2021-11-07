@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/urfave/cli/v2"
@@ -87,7 +88,7 @@ var CLIApp = &cli.App{
 	Usage:       "A Bcrypt hash/password generator",
 	ArgsUsage:   "",
 	Version:     Version + "-" + Commit,
-	Description: fmt.Sprintf("Build: %s", Build),
+	Description: fmt.Sprintf("%s: Build: %s", Name, Build),
 	Commands: []*cli.Command{
 		{
 			Name:  "generate",
@@ -130,22 +131,22 @@ func ValidateHandler(c *cli.Context) error {
 		lines, err := readLines(inputFileValue)
 
 		if err != nil {
-			fmt.Errorf("There was an error reading lines from file: %s\n", err)
+			log.Fatalf("There was an error reading lines from file: %s\n", err)
 		}
 		for _, line := range lines {
 			result, _ := matchPasswordAndHash(line)
 			hashLines = append(hashLines, result)
 		}
 		if err := returnOutput(hashLines, outputFileValue); err != nil {
-			fmt.Errorf("There was an error writing lines to file: %s\n", err)
-		}		
+			log.Fatalf("There was an error writing lines to file: %s\n", err)
+		}
 	} else {
 		hashLine := strings.Join([]string{passwordValue, hashValue}, " ")
 		result, _ := matchPasswordAndHash(hashLine)
 		hashLines = append(hashLines, result)
 
 		if err := returnOutput(hashLines, outputFileValue); err != nil {
-			fmt.Errorf("There was an error writing lines to file: %s\n", err)
+			log.Fatalf("There was an error writing lines to file: %s\n", err)
 		}
 	}
 
@@ -159,11 +160,11 @@ func GenerateHandler(c *cli.Context) error {
 	if passwordValue != "" {
 		hashLines, err := generateHashForPassword(passwordValue, cost)
 		if err != nil {
-			fmt.Errorf("There was an error creating a hash: %s\n", err)
+			log.Fatalf("There was an error creating a hash: %s\n", err)
 		}
 
 		if err := returnOutput(hashLines, outputFileValue); err != nil {
-			fmt.Errorf("There was an error writing lines to file: %s\n", err)
+			log.Fatalf("There was an error writing lines to file: %s\n", err)
 		}
 		return nil
 	}
@@ -172,20 +173,20 @@ func GenerateHandler(c *cli.Context) error {
 		lines, err := readLines(inputFileValue)
 
 		if err != nil {
-			fmt.Errorf("There was an error reading lines from file: %s\n", err)
+			log.Fatalf("There was an error reading lines from file: %s\n", err)
 		}
 
 		var hashLines []string
 		for _, password := range lines {
 			hashLine, err := generateHashForPassword(password, cost)
 			if err != nil {
-				fmt.Errorf("There was an error creating a hash: %s\n", err)
+				log.Fatalf("There was an error creating a hash: %s\n", err)
 			}
 			hashLines = append(hashLines, hashLine...)
 		}
 
 		if err := returnOutput(hashLines, outputFileValue); err != nil {
-			fmt.Errorf("There was an error writing lines to file: %s\n", err)
+			log.Fatalf("There was an error writing lines to file: %s\n", err)
 		}
 		return nil
 	}
@@ -196,13 +197,13 @@ func GenerateHandler(c *cli.Context) error {
 		password := randomString(pwLength)
 		hashLine, err := generateHashForPassword(password, cost)
 		if err != nil {
-			fmt.Errorf("There was an error creating a hash: %s\n", err)
+			log.Fatalf("There was an error creating a hash: %s\n", err)
 		}
 		hashLines = append(hashLines, hashLine...)
 	}
 
 	if err := returnOutput(hashLines, outputFileValue); err != nil {
-		fmt.Errorf("There was an error writing lines to file: %s\n", err)
+		log.Fatalf("There was an error writing lines to file: %s\n", err)
 	}
 
 	return nil

@@ -95,7 +95,6 @@ func returnOutput(hashLines []string, outFile string) error {
 
 // generates a hash from the given password string
 func generateHashForPassword(password string, cost int) ([]string, error) {
-	fmt.Printf("Generating hash for password: %s\n", password)
 	var hashLines []string
 
 	hash, err := hashPassword(password, cost)
