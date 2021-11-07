@@ -28,8 +28,4 @@ jobs:
     - name: Run testing
       run: make test
 
-    # Update go report
-    - name: Update Go Report
-      run: curl -X POST -F "repo=github.com/mijho/gobcrypt" https://goreportcard.com/checks
-
 ...
