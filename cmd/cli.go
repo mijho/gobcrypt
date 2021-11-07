@@ -46,7 +46,7 @@ var CLIApp = &cli.App{
 		},
 		&cli.StringFlag{
 			Name:     "input-file",
-			Aliases:  []string{"f"},
+			Aliases:  []string{"i"},
 			Usage:    "Specify a file to read passwords from",
 			Required: false,
 		},
@@ -86,9 +86,54 @@ func LocalHandler(c *cli.Context) error {
 		return nil
 	}
 
-	
+	if c.String("input-file") != "" {
+		lines, err := readLines(c.String("input-file"))
 
+		if err != nil {
+			fmt.Errorf("There was an error reading lines from file: %s\n", err)
+		}
 
+		var hashLines []string
+		for _, password := range lines {
+			hashLine, err := generateHashForPassword(password)
+			if err != nil {
+				fmt.Errorf("There was an error creating a hash: %s\n", err)
+			}
+			hashLines = append(hashLines, hashLine...)
+		}
+
+		if c.String("output-file") != "" {
+			if err := writeLines(hashLines, c.String("output-file")); err != nil {
+				fmt.Errorf("There was an error writing lines to file: %s\n", err)
+			}
+		} else {
+			for _, line := range hashLines {
+				fmt.Println(line)
+			}
+		}
+		return nil
+	}
+
+	var hashLines []string
+	pwLength := c.Int("length")
+	for count := c.Int("count"); count > 0; count-- {
+		password := randomString(pwLength)
+		hashLine, err := generateHashForPassword(password)
+		if err != nil {
+			fmt.Errorf("There was an error creating a hash: %s\n", err)
+		}
+		hashLines = append(hashLines, hashLine...)
+	}
+
+	if c.String("output-file") != "" {
+		if err := writeLines(hashLines, c.String("output-file")); err != nil {
+			fmt.Errorf("There was an error writing lines to file: %s\n", err)
+		}
+	} else {
+		for _, line := range hashLines {
+			fmt.Println(line)
+		}
+	}
 
 	return nil
 }
