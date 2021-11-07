@@ -83,6 +83,7 @@ var costFlag = &cli.IntFlag{
 	Destination: &costValue,
 }
 
+// CLIApp constructs the cli applications
 var CLIApp = &cli.App{
 	Name:        "gobcrypt",
 	Usage:       "A Bcrypt hash/password generator",
