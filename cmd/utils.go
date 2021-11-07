@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,9 +17,8 @@ func init() {
 	r = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
-/* This function will generate a random string based on the random value
-*  set from the init function ant the chars defined below
- */
+// This function will generate a random string based on the random value
+//  set from the init function ant the chars defined below
 func randomString(strlen int) string {
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	result := ""
@@ -42,9 +40,11 @@ func hashPassword(password string, cost int) (string, error) {
 /* This function compares the plain text password with the hash to ensure it is
 *  valid. It requires both the plain text and hash pass String to be passed to it
  */
-func checkHashAndPassword(password, hash string) bool {
+func checkHashAndPassword(hashLine string) error {
+	items := strings.Split(hashLine, " ")
+	hash, password := items[1], items[0]
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+	return err
 }
 
 // readLines reads a whole file into memory
@@ -109,13 +109,16 @@ func generateHashForPassword(password string, cost int) ([]string, error) {
 	return hashLines, err
 }
 
-/* Processes the returned Bool value from checkHashAndPassword
-*  and formats it for use in hashLines
- */
-func matchPasswordAndHash(password, hash string) string {
-	match := checkHashAndPassword(password, hash)
-	matchString := strconv.FormatBool(match)
-	matchArray := []string{"Match: ", matchString}
-	matchLine := strings.Join(matchArray, " ")
-	return string(matchLine)
+// Processes the returned Bool value from checkHashAndPassword
+//  and formats it for use in hashLines
+func matchPasswordAndHash(hashLine string) (result string, err error) {
+	items := strings.Split(hashLine, " ")
+	hash, password := items[1], items[0]
+	err = checkHashAndPassword(hashLine)
+	if err != nil {
+		result = fmt.Sprintf("MATCH: FAIL, password: %s, hash: %s", password, hash)
+		return result, err
+	}
+	result = fmt.Sprintf("MATCH: PASS, password: %s, hash: %s", password, hash)
+	return result, err
 }
