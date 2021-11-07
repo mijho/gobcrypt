@@ -1,3 +1,4 @@
+---
 name: build-release
 on: 
   pull_request:
@@ -21,9 +22,12 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body_path: CHANGELOG.md
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
           tag_name: |
             echo v$(./gobcrypt -v | awk '{print $3}' | sed 's/-.*//')
           files: |
             gobcrypt_darwin_amd64
             gobcrypt_linux_amd64
             gobcrypt_linux_arm64
+
+...
