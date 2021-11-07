@@ -1,5 +1,4 @@
-name: Main
-
+name: build-release
 on: 
   pull_request:
       branches:
@@ -18,8 +17,6 @@ jobs:
           make build-darwin-amd64
           make build-linux-amd64
           make build-linux-arm64
-      - name: Test
-        run: cat Release.txt
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
