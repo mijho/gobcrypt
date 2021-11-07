@@ -17,14 +17,13 @@ jobs:
         run: |
           make build-darwin-amd64
           make build-linux-amd64
-          make build-linux-arm64
+          make build-linux-arm64                
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: CHANGELOG.md
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
           tag_name: |
-            echo v$(./gobcrypt -v | awk '{print $3}' | sed 's/-.*//')
+            echo v$(./gobcrypt_linux_amd64 -v | awk '{print $3}' | sed 's/-.*//')
           files: |
             gobcrypt_darwin_amd64
             gobcrypt_linux_amd64
