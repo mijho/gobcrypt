@@ -76,12 +76,8 @@ func LocalHandler(c *cli.Context) error {
 			fmt.Errorf("There was an error creating a hash: %s\n", err)
 		}
 
-		if c.String("output-file") != "" {
-			if err := writeLines(hashLines, c.String("output-file")); err != nil {
-				fmt.Errorf("There was an error writing lines to file: %s\n", err)
-			} else {
-				fmt.Println(hashLines[0])
-			}
+		if err := returnOutput(hashLines, c.String("out-file")); err != nil {
+			fmt.Errorf("There was an error writing lines to file: %s\n", err)
 		}
 		return nil
 	}
@@ -102,14 +98,8 @@ func LocalHandler(c *cli.Context) error {
 			hashLines = append(hashLines, hashLine...)
 		}
 
-		if c.String("output-file") != "" {
-			if err := writeLines(hashLines, c.String("output-file")); err != nil {
-				fmt.Errorf("There was an error writing lines to file: %s\n", err)
-			}
-		} else {
-			for _, line := range hashLines {
-				fmt.Println(line)
-			}
+		if err := returnOutput(hashLines, c.String("out-file")); err != nil {
+			fmt.Errorf("There was an error writing lines to file: %s\n", err)
 		}
 		return nil
 	}
@@ -125,14 +115,8 @@ func LocalHandler(c *cli.Context) error {
 		hashLines = append(hashLines, hashLine...)
 	}
 
-	if c.String("output-file") != "" {
-		if err := writeLines(hashLines, c.String("output-file")); err != nil {
-			fmt.Errorf("There was an error writing lines to file: %s\n", err)
-		}
-	} else {
-		for _, line := range hashLines {
-			fmt.Println(line)
-		}
+	if err := returnOutput(hashLines, c.String("out-file")); err != nil {
+		fmt.Errorf("There was an error writing lines to file: %s\n", err)
 	}
 
 	return nil

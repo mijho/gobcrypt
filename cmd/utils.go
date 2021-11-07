@@ -3,12 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var r *rand.Rand // Rand for this package.
@@ -78,27 +79,22 @@ func writeLines(lines []string, path string) error {
 	return w.Flush()
 }
 
-func writeSourcesToFile(sources []string, outFile string) error {
-	file, err := os.OpenFile(outFile, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
+func returnOutput(hashLines []string, outFile string) error {
+	if outFile != "" {
+		if err := writeLines(hashLines, outFile); err != nil {
+			return err
+		}
+	} else {
+		for _, line := range hashLines {
+			fmt.Println(line)
+		}
 	}
-
-	datawriter := bufio.NewWriter(file)
-
-	for _, line := range sources {
-		_, _ = datawriter.WriteString(line + "\n")
-	}
-
-	datawriter.Flush()
-	file.Close()
-
-	return err
+	return nil
 }
 
 /* Processes the returned Bool value from checkHashAndPassword
 *  and formats it for use in hashLines
-*/
+ */
 func matchPasswordAndHash(password, hash string) string {
 	match := checkHashAndPassword(password, hash)
 	matchString := strconv.FormatBool(match)
