@@ -10,7 +10,7 @@
 
 With go get:
 ```
-go get github.com/mijho/gobcrypt
+go install github.com/mijho/gobcrypt@latest
 ```
 
 From source:
