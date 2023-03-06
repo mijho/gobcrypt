@@ -3,7 +3,7 @@ module github.com/mijho/gobcrypt
 go 1.17
 
 require (
-	github.com/urfave/cli/v2 v2.24.4
+	github.com/urfave/cli/v2 v2.25.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 )
 
