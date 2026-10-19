@@ -3,8 +3,6 @@
 #### A Bcrypt hash password generator written in golang
 
 [![test-lint](https://github.com/mijho/gobcrypt/actions/workflows/test-lint.yml/badge.svg?branch=main)](https://github.com/mijho/gobcrypt/actions/workflows/test-lint.yml)
-[![build-release](https://github.com/mijho/gobcrypt/actions/workflows/build-release.yml/badge.svg?branch=main)](https://github.com/mijho/gobcrypt/actions/workflows/build-release.yml)
-![go-report](https://goreportcard.com/badge/github.com/mijho/gobcrypt)
 
 ##### Installation Instructions
 
