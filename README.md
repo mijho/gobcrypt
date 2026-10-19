@@ -36,7 +36,7 @@ OPTIONS:
    --length value, -l value       Specify the length of password required (default: 16) (default: 16)
    --input-file value, -i value   Specify a file to read passwords from
    --output-file value, -o value  Specify a file to write out the pass/hash to
-   --cost value, -c value         Specify the cost to use (Min: 4, Max: 31) (default: 14) (default: 0)
+   --cost value, -c value         Specify the cost to use (Min: 4, Max: 31) (default: 14)
    --help, -h                     show help (default: false)
 ```
 
