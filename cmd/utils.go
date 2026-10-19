@@ -66,7 +66,7 @@ func readLines(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }() // read-only: close errors carry no data loss
 
 	var lines []string
 	scanner := bufio.NewScanner(file)
@@ -80,20 +80,24 @@ func readLines(path string) ([]string, error) {
 
 // writeLines writes lines to path. The file is created with mode 0600 because
 // it contains plaintext passwords.
-func writeLines(lines []string, path string) error {
+func writeLines(lines []string, path string) (err error) {
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if cerr := file.Close(); err == nil {
+			err = cerr
+		}
+	}()
+
 	w := bufio.NewWriter(file)
 	for _, line := range lines {
-		fmt.Fprintln(w, line)
+		if _, err := fmt.Fprintln(w, line); err != nil {
+			return err
+		}
 	}
-	if err := w.Flush(); err != nil {
-		file.Close()
-		return err
-	}
-	return file.Close()
+	return w.Flush()
 }
 
 // returnOutput writes lines to outFile, or to stdout when outFile is empty.
