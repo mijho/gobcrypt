@@ -112,3 +112,23 @@ func Test_readLinesSkipsBlank(t *testing.T) {
 		t.Errorf("unexpected lines: %q", lines)
 	}
 }
+
+func Test_hashPasswordsFromFileSkipsLong(t *testing.T) {
+	long := strings.Repeat("x", 73)
+	lines, skipped, err := hashPasswordsFromFile([]string{"short", long, "other"}, testCost)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if skipped != 1 || len(lines) != 2 {
+		t.Errorf("skipped=%d lines=%d, want 1 and 2", skipped, len(lines))
+	}
+	if err := checkHashAndPassword(lines[0]); err != nil {
+		t.Error("first line should validate")
+	}
+}
+
+func Test_generateLongPasswordErrors(t *testing.T) {
+	if _, err := generateHashForPassword(strings.Repeat("x", 73), testCost); err == nil {
+		t.Error("expected error for password over 72 bytes")
+	}
+}
