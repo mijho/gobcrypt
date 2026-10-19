@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Update Go Report
         run: curl -X POST -F "repo=github.com/mijho/gobcrypt" https://goreportcard.com/checks        
       - name: Build
@@ -23,7 +23,7 @@ jobs:
       - name: Set env
         run: echo "RELEASE_VERSION=$(./gobcrypt_linux_amd64 -v | awk '{print $3}' | sed 's/-.*//')" >> $GITHUB_ENV                         
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           body_path: CHANGELOG.md
           tag_name: ${{ env.RELEASE_VERSION }}

@@ -10,7 +10,6 @@ BUILD := $(shell date +%Y%m%dT%H%M%S%z)
 COMMIT := $(shell git rev-parse --short HEAD)
 EMAIL :=
 VERSION := 2.0.1
-GOLANG_VERSION ?= 1.17
 
 LDFLAGS := -ldflags \
 	'-X "main.Author=$(AUTHOR)" \

@@ -2,53 +2,65 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
+	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"os"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-var r *rand.Rand // Rand for this package.
+// errMalformedLine is returned when a pass/hash line does not contain a
+// "<password> <hash>" pair.
+var errMalformedLine = errors.New("malformed line: expected \"<password> <hash>\"")
 
-func init() {
-	r = rand.New(rand.NewSource(time.Now().UnixNano()))
-}
+const randomChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-// This function will generate a random string based on the random value
-//  set from the init function ant the chars defined below
-func randomString(strlen int) string {
-	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	result := ""
-	for i := 0; i < strlen; i++ {
-		index := r.Intn(len(chars))
-		result += chars[index : index+1]
+// randomString returns a cryptographically secure random string of strlen
+// characters drawn from randomChars.
+func randomString(strlen int) (string, error) {
+	out := make([]byte, strlen)
+	max := big.NewInt(int64(len(randomChars)))
+	for i := range out {
+		n, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", err
+		}
+		out[i] = randomChars[n.Int64()]
 	}
-	return result
+	return string(out), nil
 }
 
-/* This function will create a hashed password using bcrypt. It requires a
-*  String value to be passed as an argument and returns the hash as a String
- */
+// hashPassword creates a bcrypt hash of password using the given cost.
 func hashPassword(password string, cost int) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), cost)
-	return string(bytes), err
+	b, err := bcrypt.GenerateFromPassword([]byte(password), cost)
+	return string(b), err
 }
 
-/* This function compares the plain text password with the hash to ensure it is
-*  valid. It requires both the plain text and hash pass String to be passed to it
- */
+// splitPassHash splits a "<password> <hash>" line on its last space. Bcrypt
+// hashes never contain spaces, but passwords may, so the hash is always the
+// final field.
+func splitPassHash(line string) (password, hash string, err error) {
+	i := strings.LastIndex(line, " ")
+	if i < 0 {
+		return "", "", errMalformedLine
+	}
+	return line[:i], line[i+1:], nil
+}
+
+// checkHashAndPassword reports whether the password on a "<password> <hash>"
+// line matches its hash.
 func checkHashAndPassword(hashLine string) error {
-	items := strings.Split(hashLine, " ")
-	hash, password := items[1], items[0]
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err
+	password, hash, err := splitPassHash(hashLine)
+	if err != nil {
+		return err
+	}
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
-// readLines reads a whole file into memory
-// and returns a slice of its lines.
+// readLines reads a file into memory and returns its non-empty lines.
 func readLines(path string) ([]string, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -59,65 +71,61 @@ func readLines(path string) ([]string, error) {
 	var lines []string
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+		if line := scanner.Text(); line != "" {
+			lines = append(lines, line)
+		}
 	}
 	return lines, scanner.Err()
 }
 
-// writeLines writes the lines to the given file.
+// writeLines writes lines to path. The file is created with mode 0600 because
+// it contains plaintext passwords.
 func writeLines(lines []string, path string) error {
-	file, err := os.Create(path)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-
 	w := bufio.NewWriter(file)
 	for _, line := range lines {
 		fmt.Fprintln(w, line)
 	}
-	return w.Flush()
+	if err := w.Flush(); err != nil {
+		file.Close()
+		return err
+	}
+	return file.Close()
 }
 
-// hanldes returning the output to user via file or stdout
-func returnOutput(hashLines []string, outFile string) error {
+// returnOutput writes lines to outFile, or to stdout when outFile is empty.
+func returnOutput(lines []string, outFile string) error {
 	if outFile != "" {
-		if err := writeLines(hashLines, outFile); err != nil {
-			return err
-		}
-	} else {
-		for _, line := range hashLines {
-			fmt.Println(line)
-		}
+		return writeLines(lines, outFile)
+	}
+	for _, line := range lines {
+		fmt.Println(line)
 	}
 	return nil
 }
 
-// generates a hash from the given password string
+// generateHashForPassword returns a single "<password> <hash>" line.
 func generateHashForPassword(password string, cost int) ([]string, error) {
-	var hashLines []string
-
 	hash, err := hashPassword(password, cost)
 	if err != nil {
 		return nil, err
 	}
-
-	hashLine := strings.Join([]string{password, hash}, " ")
-	hashLines = append(hashLines, hashLine)
-
-	return hashLines, err
+	return []string{password + " " + hash}, nil
 }
 
-// Processes the returned Bool value from checkHashAndPassword
-//  and formats it for use in hashLines
-func matchPasswordAndHash(hashLine string) (result string, err error) {
-	items := strings.Split(hashLine, " ")
-	hash, password := items[1], items[0]
-	err = checkHashAndPassword(hashLine)
+// matchPasswordAndHash validates a "<password> <hash>" line and formats the
+// result. The returned error is non-nil if the line is malformed or does not
+// match.
+func matchPasswordAndHash(hashLine string) (string, error) {
+	password, hash, err := splitPassHash(hashLine)
 	if err != nil {
-		result = fmt.Sprintf("MATCH: FAIL, password: %s, hash: %s", password, hash)
-		return result, err
+		return "", err
 	}
-	result = fmt.Sprintf("MATCH: PASS, password: %s, hash: %s", password, hash)
-	return result, err
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
+		return fmt.Sprintf("MATCH: FAIL, password: %s, hash: %s", password, hash), err
+	}
+	return fmt.Sprintf("MATCH: PASS, password: %s, hash: %s", password, hash), nil
 }

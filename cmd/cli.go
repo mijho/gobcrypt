@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"strings"
 
 	"github.com/urfave/cli/v2"
 )
@@ -32,7 +30,7 @@ var passwordValue string
 var passwordFlag = &cli.StringFlag{
 	Name:        "password",
 	Aliases:     []string{"p"},
-	Usage:       "Password to hash",
+	Usage:       "Password to hash (generate) or verify (validate)",
 	Required:    false,
 	Destination: &passwordValue,
 }
@@ -74,11 +72,15 @@ var outputFileFlag = &cli.StringFlag{
 	Destination: &outputFileValue,
 }
 
+// defaultCost matches the default documented in the README.
+const defaultCost = 14
+
 var costValue int
 var costFlag = &cli.IntFlag{
 	Name:        "cost",
 	Aliases:     []string{"c"},
 	Usage:       "Specify the cost to use (Min: 4, Max: 31) (default: 14)",
+	Value:       defaultCost,
 	Required:    false,
 	Destination: &costValue,
 }
@@ -124,88 +126,88 @@ var CLIApp = &cli.App{
 	},
 }
 
-// ValidateHandler provides functionality to validate pass/hash pairs
+// ValidateHandler verifies pass/hash pairs. It exits non-zero if any pair fails
+// to match or is malformed, so it can be used in scripts.
 func ValidateHandler(c *cli.Context) error {
-	var hashLines []string
-
+	var lines []string
 	if inputFileValue != "" {
-		lines, err := readLines(inputFileValue)
-
+		var err error
+		lines, err = readLines(inputFileValue)
 		if err != nil {
-			log.Fatalf("There was an error reading lines from file: %s\n", err)
-		}
-		for _, line := range lines {
-			result, _ := matchPasswordAndHash(line)
-			hashLines = append(hashLines, result)
-		}
-		if err := returnOutput(hashLines, outputFileValue); err != nil {
-			log.Fatalf("There was an error writing lines to file: %s\n", err)
+			return cli.Exit(fmt.Sprintf("error reading lines from file: %s", err), 1)
 		}
 	} else {
-		hashLine := strings.Join([]string{passwordValue, hashValue}, " ")
-		result, _ := matchPasswordAndHash(hashLine)
-		hashLines = append(hashLines, result)
-
-		if err := returnOutput(hashLines, outputFileValue); err != nil {
-			log.Fatalf("There was an error writing lines to file: %s\n", err)
+		if passwordValue == "" || hashValue == "" {
+			return cli.Exit("validate needs --password and --hash, or --input-file", 1)
 		}
+		lines = []string{passwordValue + " " + hashValue}
 	}
 
+	failed := 0
+	results := make([]string, 0, len(lines))
+	for _, line := range lines {
+		result, err := matchPasswordAndHash(line)
+		if err != nil {
+			failed++
+			if result == "" {
+				result = fmt.Sprintf("MATCH: ERROR, line: %q, error: %s", line, err)
+			}
+		}
+		results = append(results, result)
+	}
+
+	if err := returnOutput(results, outputFileValue); err != nil {
+		return cli.Exit(fmt.Sprintf("error writing output: %s", err), 1)
+	}
+	if failed > 0 {
+		return cli.Exit(fmt.Sprintf("%d of %d pair(s) did not validate", failed, len(lines)), 1)
+	}
 	return nil
 }
 
-// GenerateHandler provides functionality to generate pass/hash pairs
+// GenerateHandler generates pass/hash pairs from a given password, an input
+// file, or random passwords.
 func GenerateHandler(c *cli.Context) error {
 	cost := costValue
-
-	if passwordValue != "" {
-		hashLines, err := generateHashForPassword(passwordValue, cost)
-		if err != nil {
-			log.Fatalf("There was an error creating a hash: %s\n", err)
-		}
-
-		if err := returnOutput(hashLines, outputFileValue); err != nil {
-			log.Fatalf("There was an error writing lines to file: %s\n", err)
-		}
-		return nil
-	}
-
-	if inputFileValue != "" {
-		lines, err := readLines(inputFileValue)
-
-		if err != nil {
-			log.Fatalf("There was an error reading lines from file: %s\n", err)
-		}
-
-		var hashLines []string
-		for _, password := range lines {
-			hashLine, err := generateHashForPassword(password, cost)
-			if err != nil {
-				log.Fatalf("There was an error creating a hash: %s\n", err)
-			}
-			hashLines = append(hashLines, hashLine...)
-		}
-
-		if err := returnOutput(hashLines, outputFileValue); err != nil {
-			log.Fatalf("There was an error writing lines to file: %s\n", err)
-		}
-		return nil
-	}
-
 	var hashLines []string
-	pwLength := lengthValue
-	for number := numberValue; number > 0; number-- {
-		password := randomString(pwLength)
-		hashLine, err := generateHashForPassword(password, cost)
+
+	switch {
+	case passwordValue != "":
+		lines, err := generateHashForPassword(passwordValue, cost)
 		if err != nil {
-			log.Fatalf("There was an error creating a hash: %s\n", err)
+			return cli.Exit(fmt.Sprintf("error creating a hash: %s", err), 1)
 		}
-		hashLines = append(hashLines, hashLine...)
+		hashLines = lines
+
+	case inputFileValue != "":
+		passwords, err := readLines(inputFileValue)
+		if err != nil {
+			return cli.Exit(fmt.Sprintf("error reading lines from file: %s", err), 1)
+		}
+		for _, password := range passwords {
+			lines, err := generateHashForPassword(password, cost)
+			if err != nil {
+				return cli.Exit(fmt.Sprintf("error creating a hash: %s", err), 1)
+			}
+			hashLines = append(hashLines, lines...)
+		}
+
+	default:
+		for i := 0; i < numberValue; i++ {
+			password, err := randomString(lengthValue)
+			if err != nil {
+				return cli.Exit(fmt.Sprintf("error generating random password: %s", err), 1)
+			}
+			lines, err := generateHashForPassword(password, cost)
+			if err != nil {
+				return cli.Exit(fmt.Sprintf("error creating a hash: %s", err), 1)
+			}
+			hashLines = append(hashLines, lines...)
+		}
 	}
 
 	if err := returnOutput(hashLines, outputFileValue); err != nil {
-		log.Fatalf("There was an error writing lines to file: %s\n", err)
+		return cli.Exit(fmt.Sprintf("error writing output: %s", err), 1)
 	}
-
 	return nil
 }
