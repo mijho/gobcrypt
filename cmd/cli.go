@@ -166,10 +166,13 @@ func ValidateHandler(c *cli.Context) error {
 }
 
 // GenerateHandler generates pass/hash pairs from a given password, an input
-// file, or random passwords.
+// file, or random passwords. Passwords longer than 72 bytes cannot be hashed by
+// bcrypt: from a file they are skipped with a warning and the command exits
+// non-zero after writing the rest; otherwise they are a hard error.
 func GenerateHandler(c *cli.Context) error {
 	cost := costValue
 	var hashLines []string
+	skipped := 0
 
 	switch {
 	case passwordValue != "":
@@ -184,12 +187,9 @@ func GenerateHandler(c *cli.Context) error {
 		if err != nil {
 			return cli.Exit(fmt.Sprintf("error reading lines from file: %s", err), 1)
 		}
-		for _, password := range passwords {
-			lines, err := generateHashForPassword(password, cost)
-			if err != nil {
-				return cli.Exit(fmt.Sprintf("error creating a hash: %s", err), 1)
-			}
-			hashLines = append(hashLines, lines...)
+		hashLines, skipped, err = hashPasswordsFromFile(passwords, cost)
+		if err != nil {
+			return cli.Exit(fmt.Sprintf("error creating a hash: %s", err), 1)
 		}
 
 	default:
@@ -208,6 +208,9 @@ func GenerateHandler(c *cli.Context) error {
 
 	if err := returnOutput(hashLines, outputFileValue); err != nil {
 		return cli.Exit(fmt.Sprintf("error writing output: %s", err), 1)
+	}
+	if skipped > 0 {
+		return cli.Exit(fmt.Sprintf("%d password(s) skipped: longer than the 72-byte bcrypt limit", skipped), 1)
 	}
 	return nil
 }
