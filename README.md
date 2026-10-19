@@ -59,67 +59,73 @@ OPTIONS:
 
 ## Examples
 
-Create a password and hash:
+Create a password and hash (cost 14 by default):
 ```
 $ ./gobcrypt generate
-f9fFFh7LcAaGJ89C $2a$10$pPbKZkrpHmJg5vZVGljUV.3N/gatYJN4Iv3bAnJ7b7SKgQTfZCnhS
+HxQhL1UfzkflKeEE $2a$14$xsMB6.ZbiK701eHhmaLjEeasbkmmS9y.GuP4bFEPpEebAh4bvN4IC
 ```
 Create a hash of a specific password
 ```
 $ ./gobcrypt generate -p supergoodpass
-supergoodpass $2a$10$KGm2jtacLvCXT2uitl8aQOPiDZBX8VmXIS9dZS5aAtQsQAVYetwiG
+supergoodpass $2a$14$ztiAYzgVD92wuxb7213aBOYl5RfR3dCSeKj9UFuyzaedoHQM///tq
 ```
 
-Check the hash is valid:
+Check the hash is valid. `validate` exits with status 0 when every pair matches and 1 when any pair fails or is malformed, so it can be used in scripts:
 ```
-$ ./gobcrypt validate -p supergoodpass -hp '$2a$10$KGm2jtacLvCXT2uitl8aQOPiDZBX8VmXIS9dZS5aAtQsQAVYetwiG'
-MATCH: PASS, password: supergoodpass, hash: $2a$10$KGm2jtacLvCXT2uitl8aQOPiDZBX8VmXIS9dZS5aAtQsQAVYetwiG
+$ ./gobcrypt validate -p supergoodpass -hp '$2a$14$.pR1K36frbmfWo1NjspjTOcDELTJo.LCCCD4Ft5erL1HLLwMbwPVO'
+MATCH: PASS, password: supergoodpass, hash: $2a$14$.pR1K36frbmfWo1NjspjTOcDELTJo.LCCCD4Ft5erL1HLLwMbwPVO
+$ echo $?
+0
+$ ./gobcrypt validate -p wrongpass -hp '$2a$14$.pR1K36frbmfWo1NjspjTOcDELTJo.LCCCD4Ft5erL1HLLwMbwPVO'
+MATCH: FAIL, password: wrongpass, hash: $2a$14$.pR1K36frbmfWo1NjspjTOcDELTJo.LCCCD4Ft5erL1HLLwMbwPVO
+1 of 1 pair(s) did not validate
+$ echo $?
+1
 ```
 
-Create passwords of a specific length (15 chars by default)
+Create passwords of a specific length (16 chars by default)
 ```
-$ ./gobcrypt generate -l 20                                                                              
-6DG4D7WZnA86kD2iQnnD $2a$10$IHrYPjzwBDG2BYTIcOBFlutNHEB2mBmpP6QG8ZF4iCW8Bn3suToMu
+$ ./gobcrypt generate -l 20
+6u8zxKM2Q9khYliAhbjP $2a$14$k3C7nYjjYbGV/1WZXV2ZCOhz5.TqVjEPxH1T9e/ONj6z30DYTmAA2
 ```
 
 Create a bulk amount of password hash combinations
 ```
-$ ./gobcrypt generate -n 7
-EQKEBdAYXPZNwMM0 $2a$10$.iB7vbaKj2L7cYpTTa/.nuHe/BKQEL3uXgqduBOpGVhvuHkSz0yoS
-y8mEjf6uIYx3QyLs $2a$10$QpSqInArVO9A5s/vpkgW1eOgtdLV2TJw1dqD3aQjYF0kbX0FpDp/e
-akA95A1qiwmoPcjw $2a$10$RhKxTNn.2CPB7ertSScKFO30Fqcg9xAJH.J2X8PspWLm31D2O1wR6
-J5H58PoVxR6j8n3s $2a$10$WAENUArAzRSo8zXgFbB4COUKv6vhDbPyTkFIqXVr5JOf5ksjspC2K
-o1xb8hiqPrXhEmCT $2a$10$Io7hlQuc2C1Z9A4IxVDSxO6cx2SCql1Gb65/YCb4Xj.djeGa1bDSS
-mkI6LG4Yc0d4drvE $2a$10$L.76ZOQNZkhbjQX7GzupzO4Ke/VEdlCwwv4q5vzHX5/ojEH95RkPi
-t3LjJcaHg2nEY6mZ $2a$10$mduGQTccWkQ9dQ6n1LlBxeII1IlfD6uB51Ewy/MTVQ0q88DtMHTjO
+$ ./gobcrypt generate -n 2 -c 4
+A8Fb5D359PE1oofD $2a$04$yyXvZdnygMFhUruixLF5cOKj/3sx44lFeQdR36Eni8q59LFfMVlUK
+5GJrZSqhDXVxPCRq $2a$04$RuphMwgGfp61Tl0132oJh.08SFFeDyQpvowBusXYlR4Ji1df8QYWq
 ```
 
-Create a bulk amount and write the output to file
+Create a bulk amount and write the output to file. The file is created with mode `0600` because it contains plaintext passwords.
 ```
-$ ./gobcrypt generate -o outfile.txt && cat outfile.txt                                                 
-uLTAPhWdIqGq3vPY $2a$10$zCb9z3melGqqw8I1aancVeMBS7xzXIaAAGsaDbqpj/AO3VP1/XNEi
-$ ./gobcrypt validate -p supergoodpass -hp '$2a$10$KGm2jtacLvCXT2uitl8aQOPiDZBX8VmXIS9dZS5aAtQsQAVYetwiG' -o results.txt && cat results.txt
-MATCH: PASS, password: supergoodpass, hash: $2a$10$KGm2jtacLvCXT2uitl8aQOPiDZBX8VmXIS9dZS5aAtQsQAVYetwiG
+$ ./gobcrypt generate -o outfile.txt && cat outfile.txt
+U7Bs6wLBqcqBuVSZ $2a$14$TYhWm3aSNl8eSb/xqSzvn.B2PhU3vxAdtiThNPiFqA8IcNBg.hT3W
+$ ./gobcrypt validate -i outfile.txt
+MATCH: PASS, password: U7Bs6wLBqcqBuVSZ, hash: $2a$14$TYhWm3aSNl8eSb/xqSzvn.B2PhU3vxAdtiThNPiFqA8IcNBg.hT3W
 ```
 
-Read passwords from file to hash or validate
+Read passwords from file to hash or validate. Blank lines are skipped.
 ```
 $ cat infile.txt
 password
 hotdamn
 12hfsklfh
 forbarbaz
-$ ./gobcrypt generate -i infile.txt                        
-password $2a$10$7Ttcr9C/6QkBnyewt/Ljg.HRpfoil96XSjTve7EXy5XOBiZB5Zr4a
-hotdamn $2a$10$072dU17Zf/M.SbjAP.zhNer39Z7fPOUWHOTm6.849OzA9f3NJFaGu
-12hfsklfh $2a$10$tVyXGyJ674PVJlh.dDd.seOA/RJRbDzPAlxFNjKp1Z3mVpOtOTJIG
-forbarbaz $2a$10$bboUUJP0Fdp9oWBSFGN.GuV/VfBgYuHQfpQ3JcElzMH7ZeVCes8w2
-$ ./gobcrypt validate -i outfile.txt 
-MATCH: PASS, password: uLTAPhWdIqGq3vPY, hash: $2a$10$zCb9z3melGqqw8I1aancVeMBS7xzXIaAAGsaDbqpj/AO3VP1/XNEi
+$ ./gobcrypt generate -i infile.txt
+password $2a$14$9sdf57Pn47E0PWDfSnLB.eyQQLebdUmweSvfmOTeqdoBSkj9BXwra
+hotdamn $2a$14$4qgEbl9WHX1EaBlbahbDZONeiIyForWSrJakPXRkMweDgkN13DJk.
+12hfsklfh $2a$14$KSWk2l630PQt4bMF4WblAesTN7bg5q5LMvQ9oA8MsNOSI6W4IacVS
+forbarbaz $2a$14$yb55LAVxeV/B9ap5hE2YG.t1jiEf6o.peK3voniAsHSHwHlJacvGC
 ```
 
-Manually set the cost of the BCrypt hashing process
+Manually set the cost of the BCrypt hashing process (4 to 31)
 ```
-$ ./gobcrypt generate -c 17
-NKOSv14NuLViUqkf $2a$17$DWJWvyIZH/CamvGAa59Naefhz5AnFNFbfkQ38ryhsH27J7Zovt8Gm
+$ ./gobcrypt generate -p supergoodpass -c 10
+supergoodpass $2a$10$m8XlaLF.kibYmab5fbGjbOfYjMCZVbQcWyQwEcRIdoFcPl0Otw3NC
 ```
+
+## Limitations
+
+bcrypt only uses the first 72 bytes of a password, and this tool refuses longer ones rather than silently truncating them:
+- `generate -p` and random generation with `-l` above 72 fail with an error.
+- `generate -i` skips any line longer than 72 bytes, writes the rest, prints a warning to stderr, and exits with status 1.

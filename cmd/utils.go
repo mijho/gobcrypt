@@ -116,6 +116,23 @@ func generateHashForPassword(password string, cost int) ([]string, error) {
 	return []string{password + " " + hash}, nil
 }
 
+// hashPasswordsFromFile hashes each password. Passwords longer than 72 bytes
+// are counted in skipped and left out; any other error aborts.
+func hashPasswordsFromFile(passwords []string, cost int) (lines []string, skipped int, err error) {
+	for _, password := range passwords {
+		hashed, err := generateHashForPassword(password, cost)
+		if errors.Is(err, bcrypt.ErrPasswordTooLong) {
+			skipped++
+			continue
+		}
+		if err != nil {
+			return nil, skipped, err
+		}
+		lines = append(lines, hashed...)
+	}
+	return lines, skipped, nil
+}
+
 // matchPasswordAndHash validates a "<password> <hash>" line and formats the
 // result. The returned error is non-nil if the line is malformed or does not
 // match.
